@@ -4,7 +4,7 @@ const CELL_SIZE = 15;  // Each cell is 20px
 const PREY_COUNT = 50; // Initial prey
 const PREDATOR_COUNT = 20; // Initial predators
 const MAX_PREY = 500;
-const MAX_PREDATOR = MAX_PREY / 4;
+const MAX_PREDATOR = MAX_PREY / 10;
 
 // Prey-Predator dynamics
 const alpha = 0.1;  // Prey birth rate
