@@ -3,7 +3,7 @@ const GRID_SIZE = 50;  // 20x20 grid
 const CELL_SIZE = 15;  // Each cell is 20px
 const PREY_COUNT = 50; // Initial prey
 const PREDATOR_COUNT = 20; // Initial predators
-const MAX_PREY = 500;
+const MAX_PREY = 100;
 const MAX_PREDATOR = MAX_PREY / 10;
 
 // Prey-Predator dynamics
@@ -14,12 +14,15 @@ const delta = 0.01; // Predator reproduction rate
 
 // Time step
 const deltaT = 0.1;
-const { Sprite, SpriteSheet, GameLoop, init } = kontra;
+const { Sprite, SpriteSheet, Quadtree, GameLoop, init } = kontra;
 
 // Initialize canvas
 const canvas = init('game');
 canvas.width = GRID_SIZE * CELL_SIZE;
 canvas.height = GRID_SIZE * CELL_SIZE;
+
+// Init Quadtree
+let quadtree = Quadtree();
 
 // Helper function to generate random positions
 function getRandomPosition() {
@@ -36,6 +39,7 @@ for (let i = 0; i < PREY_COUNT; i++) {
   prey.push(Sprite({
     x: pos.x,
     y: pos.y,
+    id: "prey_"+i,
     width: CELL_SIZE,
     height: CELL_SIZE,
     color: 'green',
@@ -49,6 +53,7 @@ for (let i = 0; i < PREDATOR_COUNT; i++) {
   predators.push(Sprite({
     x: pos.x,
     y: pos.y,
+    id: "predator_"+i,
     width: CELL_SIZE,
     height: CELL_SIZE,
     color: 'red',
@@ -57,6 +62,11 @@ for (let i = 0; i < PREDATOR_COUNT; i++) {
 }
 const loop = GameLoop({
   update() {
+    // Each frame we must clear and then update the quadtree to be sure to capture state & position of objects
+    quadtree.clear();
+    quadtree.add(prey);
+    quadtree.add(predators)
+
     // Modify prey movement based on predator proximity
     prey.forEach(p => {
       let nearbyPredator = predators.some(pred =>
@@ -75,6 +85,12 @@ const loop = GameLoop({
 
     // Move predators and check interactions
     predators.forEach(predator => {
+      if (!predator) {
+        console.error("Undefined predator detected!");
+      } else {
+        console.log("Predator :["+predator.id+"]");
+      }
+      (quadtree.get(predator)).map((result)=>{console.log("Predator " + predator.id + " is on the same zone as " + result.id)});
       let nearbyPreyCount = prey.filter(p =>
         Math.abs(p.x - predator.x) < CELL_SIZE * 3 && Math.abs(p.y - predator.y) < CELL_SIZE * 3
       ).length;
@@ -105,6 +121,7 @@ const loop = GameLoop({
         predators.push(Sprite({
           x: predator.x,
           y: predator.y,
+          id: "predator_"+(predators.length+1),
           width: CELL_SIZE,
           height: CELL_SIZE,
           color: 'red',
@@ -115,6 +132,7 @@ const loop = GameLoop({
 
       // Predator dies if energy is too low
       if (predator.energy <= 0) {
+        console.log("Predator "+predator.id+" died");
         predators = predators.filter(p => p !== predator);
       }
     });
@@ -126,6 +144,7 @@ const loop = GameLoop({
         prey.push(Sprite({
           x: pos.x,
           y: pos.y,
+          id: "prey_"+(prey.length+1),
           width: CELL_SIZE,
           height: CELL_SIZE,
           color: 'green',
